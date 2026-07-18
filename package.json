@@ -1,0 +1,75 @@
+{
+  "name": "@cinatra-ai/linkedin-artifacts",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "src"
+  ],
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "peerDependencies": {
+    "@cinatra-ai/sdk-extensions": "*"
+  },
+  "peerDependenciesMeta": {
+    "@cinatra-ai/sdk-extensions": {
+      "optional": true
+    }
+  },
+  "cinatra": {
+    "apiVersion": "cinatra.ai/v1",
+    "kind": "artifact",
+    "displayName": "LinkedIn Artifacts",
+    "vendor": {
+      "key": "cinatra-ai",
+      "name": "Cinatra"
+    },
+    "dependencies": [],
+    "artifact": {
+      "accepts": {
+        "file": {
+          "mimeTypes": [
+            "text/markdown",
+            "text/plain"
+          ]
+        }
+      },
+      "objectTypes": [
+        {
+          "type": "@cinatra-ai/linkedin:post-draft",
+          "claim": "dedicated",
+          "dispositions": {
+            "projection": "artifact-safe",
+            "pinnable": true,
+            "snapshotPolicy": "content",
+            "sensitivity": "normal",
+            "mutability": "draftable"
+          },
+          "schema": {
+            "type": "object",
+            "properties": {
+              "content": { "type": "string" },
+              "destination": {
+                "type": "object",
+                "properties": {
+                  "accountId": { "type": "string" },
+                  "destinationType": { "type": "string", "enum": ["member"] },
+                  "destinationId": { "type": "string" }
+                },
+                "additionalProperties": true
+              },
+              "visibility": { "type": "string", "enum": ["PUBLIC", "CONNECTIONS"] },
+              "mediaAssetRefs": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "runId": { "type": "string" },
+              "campaignId": { "type": "string" }
+            },
+            "additionalProperties": true
+          }
+        }
+      ]
+    }
+  }
+}
