@@ -3,13 +3,21 @@
   "version": "0.1.0",
   "license": "Apache-2.0",
   "type": "module",
+  "packageManager": "pnpm@9.15.9",
   "files": [
     "src"
   ],
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./src/renderers/detail": "./src/renderers/detail.tsx",
+    "./src/renderers/preview": "./src/renderers/preview.tsx"
+  },
   "peerDependencies": {
-    "@cinatra-ai/sdk-extensions": "*"
+    "@cinatra-ai/sdk-extensions": "*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "peerDependenciesMeta": {
     "@cinatra-ai/sdk-extensions": {
@@ -34,6 +42,28 @@
           ]
         }
       },
+      "ui": {
+        "abiVersion": 1,
+        "sdkAbiRange": "^2.5.0",
+        "renderers": {
+          "detail": {
+            "entry": "./src/renderers/detail.tsx",
+            "propsApiVersion": 1,
+            "representations": [
+              "text/markdown",
+              "text/plain"
+            ]
+          },
+          "preview": {
+            "entry": "./src/renderers/preview.tsx",
+            "propsApiVersion": 1,
+            "representations": [
+              "text/markdown",
+              "text/plain"
+            ]
+          }
+        }
+      },
       "objectTypes": [
         {
           "type": "@cinatra-ai/linkedin:post-draft",
@@ -48,28 +78,67 @@
           "schema": {
             "type": "object",
             "properties": {
-              "content": { "type": "string" },
+              "content": {
+                "type": "string"
+              },
               "destination": {
                 "type": "object",
                 "properties": {
-                  "accountId": { "type": "string" },
-                  "destinationType": { "type": "string", "enum": ["member"] },
-                  "destinationId": { "type": "string" }
+                  "accountId": {
+                    "type": "string"
+                  },
+                  "destinationType": {
+                    "type": "string",
+                    "enum": [
+                      "member"
+                    ]
+                  },
+                  "destinationId": {
+                    "type": "string"
+                  }
                 },
                 "additionalProperties": true
               },
-              "visibility": { "type": "string", "enum": ["PUBLIC", "CONNECTIONS"] },
+              "visibility": {
+                "type": "string",
+                "enum": [
+                  "PUBLIC",
+                  "CONNECTIONS"
+                ]
+              },
               "mediaAssetRefs": {
                 "type": "array",
-                "items": { "type": "string" }
+                "items": {
+                  "type": "string"
+                }
               },
-              "runId": { "type": "string" },
-              "campaignId": { "type": "string" }
+              "runId": {
+                "type": "string"
+              },
+              "campaignId": {
+                "type": "string"
+              }
             },
             "additionalProperties": true
           }
         }
       ]
     }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.1.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "jsdom": "^26.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.6.3",
+    "vitest": "^4.0.0"
   }
 }
