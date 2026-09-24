@@ -1,15 +1,15 @@
 // @vitest-environment node
-// ACCEPTANCE 1, the packaging half: the display is REGISTERED FOR THIS
-// EXTENSION'S OWN TYPE, published through this package's OWN `exports` at the
-// key the host's manifest generator derives, and declared at the props version
-// the display actually accepts a snapshot at.
+// ACCEPTANCE 1, the packaging half: this extension registers NO display of its
+// own. The post draft is drawn by the display of its CONTENT TYPE, which the
+// host resolves for each slot (markdown for text/markdown, plain text for
+// text/plain), so the package declares no `ui` block, exports no display
+// module, and keeps its claim on its own type and its accepted forms.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { TEXT_DISPLAY_PROPS_API_VERSION } from "../src/renderers/text-view";
 import { linkedinArtifactsManifest } from "../src/index";
 
 const pkg = JSON.parse(
@@ -25,11 +25,7 @@ const pkg = JSON.parse(
     kind: string;
     artifact: {
       accepts: { file: { mimeTypes: string[] } };
-      ui: {
-        abiVersion: number;
-        sdkAbiRange: string;
-        renderers: Record<string, { entry: string; propsApiVersion: number; representations?: string[] }>;
-      };
+      ui?: unknown;
       objectTypes: Array<{ type: string }>;
     };
   };
@@ -37,59 +33,34 @@ const pkg = JSON.parse(
 
 const MIMES = ["text/markdown", "text/plain"];
 const OWN_TYPE = "@cinatra-ai/linkedin:post-draft";
-const ARTIFACT_UI_RENDERER_ALLOWED_KEYS = new Set(["entry", "propsApiVersion", "representations"]);
-
-/** The key the host's manifest generator derives from a renderer entry: the
- * entry path minus its source extension. A display is published only at THIS
- * key — the generator refuses to generate when nothing resolves it. */
-function generatorExportsKeyForEntry(entry: string): string {
-  return `./${entry.replace(/^\.\//, "").replace(/\.(ts|tsx)$/, "")}`;
-}
 
 describe("the display is declared for this extension's own type", () => {
-  it("declares a strict v1 ui block bound to the generated host SDK ABI range", () => {
-    const ui = pkg.cinatra.artifact.ui;
-    expect(ui.abiVersion).toBe(1);
-    expect(ui.sdkAbiRange).toBe("^2.5.0");
-  });
-
-  it("ships BOTH the detail and the preview display, each naming its own entry", () => {
-    const renderers = pkg.cinatra.artifact.ui.renderers;
-    expect(Object.keys(renderers).sort()).toEqual(["detail", "preview"]);
-    expect(renderers.detail.entry).toBe("./src/renderers/detail.tsx");
-    expect(renderers.preview.entry).toBe("./src/renderers/preview.tsx");
+  it("registers NO renderer of its own for either text slot", () => {
+    // THE POST DRAFT DRAWS THROUGH THE DISPLAY OF ITS CONTENT TYPE. A renderer
+    // registered here for the `detail` or the `preview` slot would win that slot
+    // for this extension's own type and shadow the markdown and plain-text
+    // displays every other text work is drawn by. With both slots unclaimed the
+    // host resolves, for each slot, the display of the MIME at that slot.
+    //
+    // This arm carries the intent of the arms that pinned the registered
+    // displays: a strict v1 `ui` block bound to the host SDK ABI range, the
+    // detail and preview entries, the props version each display accepted, the
+    // no-host-ports rule and the generator's exports key. With nothing
+    // registered, the whole `ui` block is absent (the kind gate refuses an empty
+    // renderer map, so the block goes whole), in package.json and in the typed
+    // manifest alike, and no display module is exported.
+    expect(pkg.cinatra.artifact.ui).toBeUndefined();
+    expect(linkedinArtifactsManifest.ui).toBeUndefined();
+    expect(Object.keys(pkg.exports)).not.toContain("./src/renderers/detail");
+    expect(Object.keys(pkg.exports)).not.toContain("./src/renderers/preview");
   });
 
   it("draws only the representation forms this extension itself accepts — no wildcard, no foreign form", () => {
-    // "Registered for its own type with no content-form registration": the
-    // slots name this extension's OWN accepted forms and claim no form beyond
-    // them, so this display never wins for another extension's artifact.
+    // The extension accepts its OWN forms and claims its OWN type; with no
+    // display registered, those forms are what the host resolves a display
+    // for, and nothing here claims a form beyond them.
     expect(pkg.cinatra.artifact.accepts.file.mimeTypes).toEqual(MIMES);
-    for (const renderer of Object.values(pkg.cinatra.artifact.ui.renderers)) {
-      expect(renderer.representations).toEqual(MIMES);
-      for (const form of renderer.representations ?? []) {
-        expect(form.includes("*")).toBe(false);
-        expect(pkg.cinatra.artifact.accepts.file.mimeTypes).toContain(form);
-      }
-    }
     expect(pkg.cinatra.artifact.objectTypes.map((c) => c.type)).toContain(OWN_TYPE);
-  });
-
-  it("declares the props version the display actually accepts a snapshot at", () => {
-    const renderers = Object.values(pkg.cinatra.artifact.ui.renderers);
-    expect(renderers.length).toBeGreaterThan(0);
-    for (const renderer of renderers) {
-      expect(renderer.propsApiVersion).toBe(TEXT_DISPLAY_PROPS_API_VERSION);
-      for (const k of Object.keys(renderer)) {
-        expect(ARTIFACT_UI_RENDERER_ALLOWED_KEYS.has(k)).toBe(true);
-      }
-    }
-  });
-
-  it("requests NO host ports — a v1 display renders from the snapshot alone", () => {
-    for (const renderer of Object.values(pkg.cinatra.artifact.ui.renderers)) {
-      expect(Object.keys(renderer).sort()).toEqual(["entry", "propsApiVersion", "representations"]);
-    }
   });
 
   it("takes the sanitizer from the SDK as the OPTIONAL host-provided peer it is", () => {
@@ -113,12 +84,12 @@ describe("the display is published by the package itself", () => {
     }
   });
 
-  it("publishes EVERY declared display at the generator's key", () => {
-    for (const renderer of Object.values(pkg.cinatra.artifact.ui.renderers)) {
-      const key = generatorExportsKeyForEntry(renderer.entry);
-      expect(Object.keys(pkg.exports)).toContain(key);
-      expect(pkg.exports[key]).toBe(renderer.entry);
-    }
+  it("publishes the package root and nothing else", () => {
+    // This arm carries the intent of the arm that published every declared
+    // display at the generator's key: with no display declared, no display
+    // subpath is published, and an exports map closes every path it does not
+    // name — so the root is the package's only public entry.
+    expect(Object.keys(pkg.exports)).toEqual(["."]);
   });
 
   it("keeps the package ROOT importable — an exports map closes every path it does not name", () => {

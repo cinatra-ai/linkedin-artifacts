@@ -44,33 +44,14 @@ export const linkedinArtifactsManifest: SemanticArtifactManifest = {
     },
   },
 
-  // THE DISPLAYS THIS EXTENSION SHIPS, declared for its OWN type and published
-  // through this package's own `exports` at the key the host's manifest
-  // generator derives from each entry. Mirrors the `cinatra` block in
-  // package.json, which is the manifest of record; the manifest test keeps the
-  // two in agreement.
-  ui: {
-    "abiVersion": 1,
-    "sdkAbiRange": "^2.5.0",
-    "renderers": {
-      "detail": {
-        "entry": "./src/renderers/detail.tsx",
-        "propsApiVersion": 1,
-        "representations": [
-          "text/markdown",
-          "text/plain"
-        ]
-      },
-      "preview": {
-        "entry": "./src/renderers/preview.tsx",
-        "propsApiVersion": 1,
-        "representations": [
-          "text/markdown",
-          "text/plain"
-        ]
-      }
-    }
-  },
+  // NO DISPLAY OF ITS OWN. The post draft is not this package's to draw: a
+  // renderer registered here would win a slot for this extension's own type and
+  // shadow the displays every other text work is drawn by. Both slots are left
+  // unclaimed, so the post draft is drawn by the display of its content type,
+  // which the host resolves for each slot — markdown for text/markdown, plain
+  // text for text/plain. The `cinatra` block in package.json, the manifest of
+  // record, declares no `ui` block either; the manifest test keeps the two in
+  // agreement.
 };
 
 export {
@@ -88,5 +69,5 @@ export {
 // TYPES ONLY, AND FROM THE SANITIZER-FREE CONTRACT MODULE. The view leaf reaches
 // the host-provided sanitizer, and a type re-export from THAT module would make
 // a compiler follow it there. This root module must stay resolvable with nothing
-// installed. The displays are imported at their own published subpaths.
+// installed. The display modules are not exported by this package.
 export type { TextView, TextFloorReason } from "./renderers/text-view-contract";
