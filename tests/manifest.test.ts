@@ -23,6 +23,7 @@ const pkg = JSON.parse(
   peerDependenciesMeta?: Record<string, { optional?: boolean }>;
   cinatra: {
     kind: string;
+    displayName: string;
     artifact: {
       accepts: { file: { mimeTypes: string[] } };
       ui?: unknown;
@@ -35,6 +36,11 @@ const MIMES = ["text/markdown", "text/plain"];
 const OWN_TYPE = "@cinatra-ai/linkedin:post-draft";
 
 describe("the display is declared for this extension's own type", () => {
+  it("declares the LinkedIn post kind label for its post-draft claim", () => {
+    expect(pkg.cinatra.artifact.objectTypes.map((claim) => claim.type)).toEqual([OWN_TYPE]);
+    expect(pkg.cinatra.displayName).toBe("LinkedIn post");
+  });
+
   it("registers NO renderer of its own for either text slot", () => {
     // THE POST DRAFT DRAWS THROUGH THE DISPLAY OF ITS CONTENT TYPE. A renderer
     // registered here for the `detail` or the `preview` slot would win that slot
